@@ -8,6 +8,7 @@ const passport = require("passport");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 const auth_routes = require("./routes/auth.js");
+const app_routes = require("./routes/app.js");
 require("./passport.js");
 require("./db.js");
 
@@ -39,6 +40,7 @@ app.use(passport.session());
 
 // routing
 app.use("/auth", auth_routes);
+app.use("/app", app_routes);
 
 // start the app
 app.listen(process.env.PORT || 8463, () => {

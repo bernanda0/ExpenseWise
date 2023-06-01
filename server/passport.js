@@ -24,7 +24,7 @@ passport.use(
           const isMatch = await bcrypt.compare(password, user.rows[0].password);
           if (isMatch) {
             console.log("User successfully logged in!");
-            done(null, user.rows[0]);
+            done(null, user.rows[0].uid);
           } else {
             console.log("Incorrect password");
             done(null, false, { message: "Incorrect password" });
@@ -51,31 +51,26 @@ passport.use(
     },
     async (_, __, ____, profile, done) => {
       const account = profile._json;
-      let logged_user = {};
+      let user = {};
       try {
-        const user = await pool.query("SELECT * FROM users WHERE email = $1", [
+        user = await pool.query("SELECT * FROM users WHERE email = $1", [
           account.email,
         ]);
         if (user.rows.length > 0) {
           console.log("User already registered, continuing to login");
-          logged_user = {
-            username: user.rows[0].username,
-            email: user.rows[0].email,
-            img: user.rows[0].img,
-          };
         } else {
-          await pool.query(
-            "INSERT INTO users (username, email, img) VALUES ($1, $2, $3) RETURNING *",
-            [account.name, account.email, account.picture]
+          // create new wallet for new user
+          const newWallet = await pool.query(
+            "INSERT INTO wallet (balance) VALUES (0) RETURNING *",
+          );
+          const walletId = newWallet.rows[0].wid;
+          user = await pool.query(
+            "INSERT INTO users (username, email, img, wid) VALUES ($1, $2, $3, $4) RETURNING *",
+            [account.name, account.email, account.picture, walletId]
           );
           console.log("User successfully registered in database");
-          logged_user = {
-            username: account.name,
-            email: account.email,
-            img: account.picture,
-          };
         }
-        done(null, logged_user);
+        done(null, user.rows[0].uid);
       } catch (err) {
         console.log(err);
         done(err);
@@ -84,10 +79,15 @@ passport.use(
   )
 );
 
-passport.serializeUser((user, done) => {
-  done(null, user);
+passport.serializeUser((uid, done) => {
+  done(null, uid);
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
+passport.deserializeUser((uid, done) => {
+  pool.query("SELECT * FROM users WHERE uid = $1", [uid], (err, results) => {
+    if (err) {
+      return done(err);
+    }
+    return done(null, results.rows[0]);
+  });
 });
