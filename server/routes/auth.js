@@ -96,14 +96,20 @@ router.post("/register", async (req, res) => {
         message: "User already registered",
       });
     } else {
+      // Create new wallet for new user
+      const newWallet = await pool.query(
+        "INSERT INTO wallet (balance) VALUES (0) RETURNING *",
+      );
+      const walletId = newWallet.rows[0].wid;
+      // Create new user
       const salt = await bcrypt.genSalt(10);
       const bcryptPassword = await bcrypt.hash(password, salt);
       const newUser = await pool.query(
-        "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
-        [username, email, bcryptPassword]
+        "INSERT INTO users (username, email, password, wid) VALUES ($1, $2, $3, $4) RETURNING *",
+        [username, email, bcryptPassword, walletId]
       );
       console.log("User successfully registered");
-      req.login(newUser.rows[0], (err) => {
+      req.login(newUser.rows[0].uid, (err) => {
         if (err) {
           console.log(err);
           return next(err);
