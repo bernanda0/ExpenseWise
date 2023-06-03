@@ -29,23 +29,12 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
+// verify token from google login in android app
 router.post(
-  "/login/local",
-  (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        return res.redirect("/auth/login/failed?message=" + encodeURIComponent(info.message));
-      }
-      req.logIn(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-        return res.redirect("/auth/login/success");
-      });
-    })(req, res, next);
+  "/google/verify_token",
+  passport.authenticate("google-id-token", { failureRedirect: "/auth/login/failed" }),
+  async (req, res) => {
+    res.redirect("/auth/login/success");
   }
 );
 
@@ -99,7 +88,7 @@ router.post("/register", async (req, res) => {
     } else {
       // Create new wallet for new user
       const newWallet = await pool.query(
-        "INSERT INTO wallet (balance) VALUES (0) RETURNING *",
+        "INSERT INTO wallet (balance) VALUES (0) RETURNING *"
       );
       const walletId = newWallet.rows[0].wid;
       // Create new user

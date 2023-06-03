@@ -109,6 +109,14 @@
                 android:textColor="@color/black"
                 android:backgroundTint="@color/primary_200" />
 
+            <com.google.android.gms.common.SignInButton
+                android:id="@+id/google_sign_in_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp">
+
+            </com.google.android.gms.common.SignInButton>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -135,6 +143,7 @@
                 android:textAllCaps="false"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/primary_400" />
+
         </LinearLayout>
 
     </LinearLayout>

@@ -1,6 +1,7 @@
 //  Using Two Strategies : Google and local
 const { Strategy: GoogleStrategy } =
   require("passport-google-oauth20").Strategy;
+const GoogleTokenStrategy = require("passport-google-id-token");
 const { Strategy: LocalStrategy } = require("passport-local").Strategy;
 
 // Importing modules
@@ -42,6 +43,42 @@ passport.use(
 );
 
 passport.use(
+  new GoogleTokenStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+    async (parsedToken, googleId, done) => {
+        let account = parsedToken.payload;
+        let user = {};
+        try {
+          user = await pool.query("SELECT * FROM users WHERE email = $1", [
+            account.email,
+          ]);
+          if (user.rows.length > 0) {
+            console.log("User already registered, continuing to login");
+          } else {
+            // create new wallet for new user
+            const newWallet = await pool.query(
+              "INSERT INTO wallet (balance) VALUES (0) RETURNING *"
+            );
+            const walletId = newWallet.rows[0].wid;
+            user = await pool.query(
+              "INSERT INTO users (username, email, img, wid) VALUES ($1, $2, $3, $4) RETURNING *",
+              [account.name, account.email, account.picture, walletId]
+            );
+            console.log("User successfully registered in database");
+          }
+          done(null, user.rows[0].uid);
+        } catch (err) {
+          console.log(err);
+          done(err);
+        }
+      })
+);
+
+
+passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -61,7 +98,7 @@ passport.use(
         } else {
           // create new wallet for new user
           const newWallet = await pool.query(
-            "INSERT INTO wallet (balance) VALUES (0) RETURNING *",
+            "INSERT INTO wallet (balance) VALUES (0) RETURNING *"
           );
           const walletId = newWallet.rows[0].wid;
           user = await pool.query(
