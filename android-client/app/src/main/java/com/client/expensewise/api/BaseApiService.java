@@ -15,13 +15,14 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface BaseApiService {
-    @GET("auth/google")
-    Call<LoginResponse> loginGoogle ();
-
     @FormUrlEncoded
     @POST("auth/login/local")
     Call<LoginResponse> loginLocal (@Field("email") String email,
                                    @Field("password") String password);
+
+    @FormUrlEncoded
+    @POST("auth/google/verify_token")
+    Call<LoginResponse> loginGoogle (@Field("id_token") String idToken);
 
     @GET("auth/logout")
     Call<ResponseBody> logout ();
