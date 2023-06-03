@@ -6,14 +6,22 @@ const express = require("express");
 const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
-const bcrypt = require("bcrypt");
+const connect_pg = require("connect-pg-simple");
 const auth_routes = require("./routes/auth.js");
 const app_routes = require("./routes/app.js");
+const ovo_routes = require("./routes/third_party.js");
 require("./passport.js");
-require("./db.js");
+
+// pg pool
+const pool = require("./db.js");
 
 // Instantiate the express app and middleware
 const app = express();
+const PostgresqlStore = connect_pg(session);
+const sessionStore = new PostgresqlStore({
+  pool: pool,
+  tableName: "session",
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -26,6 +34,7 @@ app.use(
     },
     resave: true,
     saveUninitialized: true,
+    store: sessionStore,
   })
 );
 app.use(
@@ -41,6 +50,7 @@ app.use(passport.session());
 // routing
 app.use("/auth", auth_routes);
 app.use("/app", app_routes);
+app.use("/ovo", ovo_routes);
 
 // start the app
 app.listen(process.env.PORT || 8463, () => {

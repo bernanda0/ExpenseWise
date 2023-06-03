@@ -4,12 +4,29 @@ const pool = require("../db.js");
 express().use(express.json());
 express().use(express.urlencoded({ extended: true }));
 
+// function to handle session, if user not loggin redierct to sessionError
+const sessionChecker = (req, res, next) => {
+  console.log(req.session.passport);
+  if (req.session.passport) {
+    next();
+  } else {
+    res.redirect("/app/sessionError");
+  }
+}
+
+router.get("/sessionError", (req, res) => {
+  res.status(401).json({
+    success: false,
+    message: "User not logged in or session expired",
+  });
+});
+
 // GET ENDPOINT
 // User
-router.get("/user", async (req, res) => {
+router.get("/user", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
-    const query = "SELECT * FROM users WHERE uid = $1;";
+    const query = "SELECT * FROM get_user($1);";
     const user = await pool.query(query, [uid]);
     res.status(200).json({
       success: true,
@@ -25,7 +42,7 @@ router.get("/user", async (req, res) => {
 });
 
 // Balance
-router.get("/wallet", async (req, res) => {
+router.get("/wallet", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const query =
@@ -45,7 +62,7 @@ router.get("/wallet", async (req, res) => {
 });
 
 // All the transaction
-router.get("/transactions", async (req, res) => {
+router.get("/transactions", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const query = "SELECT * FROM get_transactions($1);";
@@ -63,9 +80,116 @@ router.get("/transactions", async (req, res) => {
   }
 });
 
+// Get the json summary for downloading
+router.get("/summary", sessionChecker, async (req, res) => {
+  try {
+    let summary = {
+      user : {
+        username: "",
+        email: "",
+        occupation: "",
+      },
+      time_range : {
+        start: "",
+        end: "",
+      },
+      wallet : {
+        balance: 0,
+        total_income: 0,
+        total_expense: 0,
+      },
+      transactions: [],
+    }
+    const uid = req.session.passport.user;
+    const user = await pool.query("SELECT * FROM users WHERE uid = $1;", [uid]);
+    const time_range = await pool.query("SELECT * FROM get_time_range($1);", [uid]);
+    const wallet = await pool.query("SELECT * FROM wallet WHERE wid = (SELECT wid FROM users WHERE uid = $1);", [uid]);
+    const transactions_query = await pool.query("SELECT * FROM get_transactions($1);", [uid]);
+    
+    // user summary
+    summary.user.username = user.rows[0].username;
+    summary.user.email = user.rows[0].email;
+    summary.user.occupation = user.rows[0].occupation;
+
+    // time range summary
+    summary.time_range.start = time_range.rows[0].oldest_time;
+    summary.time_range.end = time_range.rows[0].newest_time;
+
+    // wallet summary
+    summary.wallet.balance = wallet.rows[0].balance;
+    summary.wallet.total_income = wallet.rows[0].total_income;
+    summary.wallet.total_expense = wallet.rows[0].total_expense;
+
+    // transactions summary
+    transactions_query.rows.forEach((transaction) => {
+      let temp = {
+        description: transaction.t_description,
+        amount: transaction.t_amount,
+        transaction_type: transaction.tid.startsWith("i") ? "income" : "expense",
+        category: transaction.t_category,
+        time: transaction.t_time,
+      }
+      summary.transactions.push(temp);
+    })
+
+    console.log(summary);
+    res.status(200).json({
+      success: true,
+      summary: summary,
+    });
+  
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot get summary",
+    });
+  }
+});
+
+
+// Get the all category of income and its percentage
+router.get("/income/category", sessionChecker, async (req, res) => {
+  try {
+    const uid = req.session.passport.user;
+    const query = "SELECT * FROM icat_percentage($1);";
+    const income_category = await pool.query(query, [uid]);
+    res.status(200).json({
+      success: true,
+      income_category: income_category.rows,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot get income category",
+    });
+  }
+});
+
+// Get the all category of expense and its percentage
+router.get("/expense/category", sessionChecker, async (req, res) => {
+  try {
+    const uid = req.session.passport.user;
+
+    const query = "SELECT * FROM ecat_percentage($1);";
+    const expense_category = await pool.query(query, [uid]);
+    res.status(200).json({
+      success: true,
+      expense_category: expense_category.rows,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot get expense category",
+    });
+  }
+});
+
 // POST ENDPOINT
 // Income Insert
-router.post("/income/insert", async (req, res) => {
+router.post("/income/insert", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const { icid, amount, time, description } = req.body;
@@ -92,7 +216,7 @@ router.post("/income/insert", async (req, res) => {
 });
 
 // Expense Insert
-router.post("/expense/insert", async (req, res) => {
+router.post("/expense/insert", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const { ecid, amount, time, description } = req.body;
@@ -120,7 +244,7 @@ router.post("/expense/insert", async (req, res) => {
 
 //PUT ENDPOINT
 // Income Update
-router.put("/income/update", async (req, res) => {
+router.put("/income/update", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const { iid, icid, amount, time, description } = req.body;
@@ -148,7 +272,7 @@ router.put("/income/update", async (req, res) => {
 });
 
 // expense Update
-router.put("/expense/update", async (req, res) => {
+router.put("/expense/update", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const { eid, ecid, amount, time, description } = req.body;
@@ -177,7 +301,7 @@ router.put("/expense/update", async (req, res) => {
 
 // DELETE ENDPOINT
 // Income Delete
-router.delete("/income/delete", async (req, res) => {
+router.delete("/income/delete", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const { iid } = req.body;
@@ -197,7 +321,7 @@ router.delete("/income/delete", async (req, res) => {
 });
 
 // Expense Delete
-router.delete("/expense/delete", async (req, res) => {
+router.delete("/expense/delete", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const { eid } = req.body;

@@ -54,6 +54,7 @@ router.get("/login/success", (req, res) => {
     res.status(200).json({
       success: true,
       message: `Welcome ${req.user.username}!`,
+      uid: req.user.uid,
     });
   } else {
     res.status(401).json({
@@ -65,7 +66,7 @@ router.get("/login/success", (req, res) => {
 
 router.get("/login/failed", (req, res) => {
   const message = req.query.message || "Login failed";
-  res.status(401).json({
+  res.status(400).json({
     success: false,
     message: message,
   });
@@ -91,7 +92,7 @@ router.post("/register", async (req, res) => {
     ]);
     if (user.rows.length > 0) {
       console.log("User already registered");
-      res.status(401).json({
+      res.status(400).json({
         success: false,
         message: "User already registered",
       });
@@ -120,7 +121,7 @@ router.post("/register", async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(401).send(error.message);
+    res.status(400).send(error.message);
   }
 });
 

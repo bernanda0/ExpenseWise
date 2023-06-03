@@ -1,8 +1,10 @@
 package com.client.expensewise.api;
 
+import com.client.expensewise.model.GetUserResponse;
 import com.client.expensewise.model.LoginResponse;
 import com.client.expensewise.model.User;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
@@ -17,10 +19,15 @@ public interface BaseApiService {
     Call<LoginResponse> loginGoogle ();
 
     @FormUrlEncoded
-    @Headers("Cache-Control: max-age=640000")
     @POST("auth/login/local")
     Call<LoginResponse> loginLocal (@Field("email") String email,
-                                    @Field("password") String password);
+                                   @Field("password") String password);
+
+    @GET("auth/logout")
+    Call<ResponseBody> logout ();
+
+    @GET("app/user")
+    Call<GetUserResponse> getUser ();
 
     @FormUrlEncoded
     @POST("auth/register")
