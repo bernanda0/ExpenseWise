@@ -1,4 +1,7 @@
--- creating sequence for serial
+-- EXPENSE WISE SQL DUMP
+-- Version 1.0
+
+-- Sequence for serial
 CREATE SEQUENCE uid_seq START 1;
 CREATE SEQUENCE wid_seq START 1;
 CREATE SEQUENCE eid_seq START 1;
@@ -6,10 +9,22 @@ CREATE SEQUENCE iid_seq START 1;
 CREATE SEQUENCE ecid_seq START 1;
 CREATE SEQUENCE icid_seq START 1;
 
--- creating enum
-CREATE TYPE e_wallet AS ENUM ('OVO', 'GOPAY', 'DANA');
+-- Session 
+CREATE TABLE session (
+    sid TEXT PRIMARY KEY NOT NULL,
+    sess JSON NOT NULL,
+    expire TIMESTAMP NOT NULL
+);
 
--- creating table 
+-- Enumeration for e_wallet
+CREATE TYPE e_wallet AS ENUM ('OVO', 'GOPAY', 'DANA');
+CREATE TABLE e_wallet_token (
+    id SERIAL PRIMARY KEY,
+    type e_wallet,
+    token TEXT
+); 
+
+-- Wallet table 
 CREATE TABLE wallet (
     wid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('w', nextval('wid_seq')),
     total_income INTEGER DEFAULT 0,
@@ -18,6 +33,7 @@ CREATE TABLE wallet (
     connected_wallet e_wallet [] DEFAULT '{}' :: e_wallet []
 );
 
+-- User table
 CREATE TABLE users (
     uid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('u', nextval('uid_seq')),
     username VARCHAR(30) UNIQUE NOT NULL,
@@ -30,11 +46,13 @@ CREATE TABLE users (
     wid TEXT REFERENCES wallet (wid) ON DELETE CASCADE
 );
 
+-- Expense category table
 CREATE TABLE expense_category (
     ecid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('ec', nextval('ecid_seq')),
     ec_name VARCHAR(30) UNIQUE NOT NULL
 );
 
+-- Expense table
 CREATE TABLE expense (
     eid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('e', nextval('eid_seq')),
     ecid TEXT REFERENCES expense_category (ecid) ON DELETE CASCADE,
@@ -46,6 +64,7 @@ CREATE TABLE expense (
     snapshot_balance INTEGER
 );
 
+-- Expense level table
 CREATE TABLE expense_level (
     percentage_range_lo FLOAT NOT NULL,
     percentage_range_hi FLOAT NOT NULL,
@@ -53,11 +72,13 @@ CREATE TABLE expense_level (
     PRIMARY KEY (percentage_range_lo, percentage_range_hi)
 );
 
+-- Income category table
 CREATE TABLE income_category (
     icid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('ic', nextval('icid_seq')),
     ic_name VARCHAR(30) UNIQUE NOT NULL
 );
 
+-- Income table
 CREATE TABLE income (
     iid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('i', nextval('iid_seq')),
     icid TEXT REFERENCES income_category (icid) ON DELETE CASCADE,
@@ -67,6 +88,7 @@ CREATE TABLE income (
     description TEXT
 );
 
+-- User rank table
 CREATE TABLE user_rank (
     point_range_lo INTEGER NOT NULL,
     point_range_hi INTEGER NOT NULL,
@@ -74,7 +96,7 @@ CREATE TABLE user_rank (
     PRIMARY KEY (point_range_lo, point_range_hi)
 );
 
--- inserting base record
+-- Base record for the reference table
 INSERT INTO
     expense_category (ec_name)
 VALUES
@@ -100,18 +122,21 @@ VALUES
     (0, 10, 'Green'),
     (11, 30, 'Yellow'),
     (31, 50, 'Orange'),
-    (51, 100, 'Red');
+    (51, 9999, 'Red');
 
 INSERT INTO
     user_rank
 VALUES
     (-9999, -1, 'Waster'),
-    (0, 999, 'Mediocre'),
+    (0, 999, 'Beginner'),
     (1000, 2999, 'Saver'),
     (3000, 5999, 'Wise'),
     (6000, 9999, 'Lord');
 
--- creating function
+
+-- Function definition
+
+-- A trigger function to update the wallet balance, total income, and total expense 
 CREATE FUNCTION update_wallet() RETURNS TRIGGER AS $$
 BEGIN
     DECLARE
@@ -151,6 +176,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Add a trigger that will update the wallet balance, total income, and total expense
 CREATE TRIGGER update_wallet_trigger
 AFTER INSERT OR UPDATE OR DELETE ON expense
 FOR EACH ROW
@@ -161,6 +187,7 @@ AFTER INSERT OR UPDATE OR DELETE ON income
 FOR EACH ROW
 EXECUTE FUNCTION update_wallet();
 
+-- A trigger function to update the expense percentage and snapshot balance
 CREATE FUNCTION update_expense_details() RETURNS TRIGGER AS $$
 BEGIN
     DECLARE
@@ -190,12 +217,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Add a trigger that will update the expense percentage and snapshot balance
 CREATE TRIGGER trigger_expense_details
 BEFORE INSERT OR UPDATE ON expense
 FOR EACH ROW
 EXECUTE FUNCTION update_expense_details();
 
-DROP FUNCTION get_transactions(user_id TEXT);
+-- A function to return all the transactions of a user
 CREATE FUNCTION get_transactions(user_id TEXT) RETURNS TABLE (
     tid TEXT,
     t_category VARCHAR(30),
@@ -224,11 +252,138 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM get_transactions('u1');
+-- A trigger function that will update the user points with this rule
+-- every expense that has 'green' level will increase 10 points
+-- every expense that has 'yellow' level will increase 4 points
+-- every expense that has 'orange' level will increase 2 points
+-- every expense that has 'red' level will reduce 5 points
+-- and every expense that has 'black' level will reduce 10 points
+DROP FUNCTION update_user_points() CASCADE;
+CREATE FUNCTION update_user_points() RETURNS TRIGGER AS $$
+BEGIN
+    DECLARE
+        user_id TEXT;
+        user_points INTEGER;
+        expense_level VARCHAR(10);
+    BEGIN
+        user_id := NEW.uid;
+        expense_level := (
+            SELECT el.color_level
+            FROM expense e
+            JOIN expense_level el ON e.percentage BETWEEN el.percentage_range_lo AND el.percentage_range_hi
+            WHERE e.eid = NEW.eid
+        );
+
+        IF (expense_level = 'Green') THEN
+            RAISE NOTICE 'user will get 10 points';
+            UPDATE users
+            SET points = points + 10
+            WHERE uid = user_id;
+        ELSIF (expense_level = 'Yellow') THEN
+            RAISE NOTICE 'user will get 4 points';
+            UPDATE users
+            SET points = points + 4
+            WHERE uid = user_id;
+        ELSIF (expense_level = 'Orange') THEN
+            RAISE NOTICE 'user will get 2 points';
+            UPDATE users
+            SET points = points + 2
+            WHERE uid = user_id;
+        ELSIF (expense_level = 'Red') THEN
+            RAISE NOTICE 'user will lose 10 points';
+            UPDATE users
+            SET points = points - 10
+            WHERE uid = user_id;
+        ELSIF (expense_level = 'Black') THEN
+            RAISE NOTICE 'user will lose 15 points';
+            UPDATE users
+            SET points = points - 15
+            WHERE uid = user_id;
+        END IF;
+    END;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add a trigger that will update the user points
+CREATE TRIGGER update_user_points_trigger
+AFTER INSERT OR UPDATE ON expense
+FOR EACH ROW
+EXECUTE FUNCTION update_user_points();
+
+-- A function that will return the summary of a user 
+CREATE FUNCTION get_user(user_id TEXT) RETURNS TABLE (
+    username VARCHAR(30),
+    email VARCHAR(30),
+    img TEXT,
+    phone_number VARCHAR(16),
+    occupation TEXT,
+    points INTEGER,
+    user_rank VARCHAR(30)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT u.username, u.email, u.img, u.phone_number, u.occupation, u.points, ur.title
+    FROM users u
+    JOIN user_rank ur ON u.points BETWEEN ur.point_range_lo AND ur.point_range_hi
+    WHERE u.uid = user_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- A function that will return the ranged time from the oldest transaction to the newest transaction
+CREATE FUNCTION get_time_range(user_id TEXT) RETURNS TABLE (
+    oldest_time TIMESTAMP,
+    newest_time TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT MIN(t_time), MAX(t_time)
+    FROM get_transactions(user_id);
+END;
+$$ LANGUAGE plpgsql;
+
+-- NOT YET IMPLEMENTED : Goal Setter
+
+
+
+
+
+-- BELOW IS DEPRECATED AND TESTED QUERY
+-- A function that will return all the income category and its percentage
+CREATE FUNCTION icat_percentage (user_id TEXT) RETURNS TABLE (
+    ic_name VARCHAR(30),
+    percentage FLOAT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT ic.ic_name, SUM(i.amount)::float / (SELECT SUM(amount) FROM income WHERE uid = user_id) * 100
+    FROM income i
+    JOIN income_category ic ON ic.icid = i.icid
+    WHERE i.uid = user_id
+    GROUP BY ic.ic_name
+    ORDER BY 2 DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- A function that will return all the expense category and its percentage
+CREATE FUNCTION ecat_percentage (user_id TEXT) RETURNS TABLE (
+    ec_name VARCHAR(30),
+    percentage FLOAT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT ec.ec_name, SUM(e.amount)::float / (SELECT SUM(amount) FROM expense WHERE uid = user_id) * 100
+    FROM expense e
+    JOIN expense_category ec ON ec.ecid = e.ecid
+    WHERE e.uid = user_id
+    GROUP BY ec.ec_name
+    ORDER BY 2 DESC;
+END;
+$$ LANGUAGE plpgsql;
 
 -- create example of income
 INSERT INTO income (uid, icid, amount, time, description) VALUES 
-    ('u1', 'ic1', 1000000, '2020-01-01 00:17:00', 'Gaji');
+    ('u1', 'ic1', 15000000, '2022-01-01 00:17:00', 'Bonus');
 INSERT INTO income (uid, icid, amount, time, description) VALUES 
     ('u1', 'ic2', 10000000, '2021-01-01 00:17:00', 'Gaji');
 
@@ -240,11 +395,4 @@ INSERT INTO expense (uid, ecid, amount, time, description) VALUES
 INSERT INTO expense (uid, ecid, amount, time, description) VALUES 
     ('u1', 'ec3', 37000, '2018-01-01 00:17:00', 'Makan di warteg');
 INSERT INTO expense (uid, ecid, amount, time, description) VALUES 
-    ('u1', 'ec3', 5000000, '2018-01-01 00:17:00', 'Beli PS4');
-    
--- query
-
--- NOTE YANG KURANG
--- ALgoritma penambahan point
--- Goal Setter
--- Peringatan
+    ('u1', 'ec4', 10000000, '2022-01-01 00:17:00', 'Beli S23');

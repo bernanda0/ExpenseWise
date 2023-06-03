@@ -8,4 +8,7 @@
     <color name="primary_300">#BD99BA</color>
     <color name="primary_200">#F4B5CB</color>
     <color name="primary_100">#FDEAF1</color>
+    
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
 </resources>

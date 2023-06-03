@@ -1,18 +1,16 @@
 package com.client.expensewise.model;
 
-public class LoginResponse extends BaseResponse {
-    private String uid;
-
-    public String getUid() {
-        return uid;
+public class GetUserResponse extends BaseResponse {
+    private User user;
+    public User getUser() {
+        return user;
     }
-
     @Override
     public String toString() {
-        return "LoginResponse{" +
+        return "RequestUser{" +
                 "success=" + super.isSuccess() +
                 ", message='" + super.getMessage() + '\'' +
-                ", uid=" + uid +
+                ", user=" + user +
                 '}';
     }
 }
