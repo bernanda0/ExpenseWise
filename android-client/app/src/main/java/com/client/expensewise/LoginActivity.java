@@ -128,13 +128,14 @@ public class LoginActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
-
+              
+                googleSignInClient.signOut();
+              
                 if (res.isSuccess()) {
                     uid = res.getUid();
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putString("uid", uid);
                     editor.apply();
-                    googleSignInClient.signOut();
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     finishAffinity();
                 }
@@ -143,6 +144,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
+                googleSignInClient.signOut();
                 Toast.makeText(mContext, "Login Failed", Toast.LENGTH_SHORT).show();
             }
         });
