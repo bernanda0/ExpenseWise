@@ -128,7 +128,9 @@ public class LoginActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+              
                 googleSignInClient.signOut();
+              
                 if (res.isSuccess()) {
                     uid = res.getUid();
                     SharedPreferences.Editor editor = preferences.edit();
