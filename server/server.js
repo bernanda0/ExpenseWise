@@ -9,7 +9,8 @@ const session = require("express-session");
 const connect_pg = require("connect-pg-simple");
 const auth_routes = require("./routes/auth.js");
 const app_routes = require("./routes/app.js");
-const ovo_routes = require("./routes/third_party.js");
+const ovo_routes = require("./routes/ovo.js");
+const gpt_routes = require("./routes/ocr_gpt.js");
 require("./passport.js");
 
 // pg pool
@@ -51,6 +52,7 @@ app.use(passport.session());
 app.use("/auth", auth_routes);
 app.use("/app", app_routes);
 app.use("/ovo", ovo_routes);
+app.use("/gpt", gpt_routes);
 
 // start the app
 app.listen(process.env.PORT || 8463, () => {
