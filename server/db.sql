@@ -96,6 +96,63 @@ CREATE TABLE user_rank (
     PRIMARY KEY (point_range_lo, point_range_hi)
 );
 
+-- Goal table
+CREATE TABLE user_goal (
+    uid TEXT REFERENCES users (uid) ON DELETE CASCADE UNIQUE,
+    p_expense INTEGER DEFAULT 0,
+    goal_expense INTEGER NOT NULL,
+    end_period DATE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ongoing'
+);
+
+INSERT INTO user_goal (uid, goal_expense, end_period) VALUES ('u1', 1000000, '2022-01-01');
+INSERT INTO expense (uid, ecid, amount, time, description) VALUES ('u1', 'ec1', 60000, '2021-12-23 00:17:00', 'Beli elektronik');
+UPDATE expense SET amount = 1200000 WHERE eid = 'e16';
+DELETE FROM user_goal WHERE uid = 'u1';
+-- Trigger and function
+-- every time there is new or updated expense, the trigger will update the p_expense in user_goal table
+CREATE FUNCTION update_p_expense() RETURNS TRIGGER AS $$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        UPDATE user_goal
+        SET p_expense = p_expense + NEW.amount
+        WHERE uid = NEW.uid;
+    ELSIF (TG_OP = 'UPDATE') THEN
+        UPDATE user_goal
+        SET p_expense = p_expense + NEW.amount - OLD.amount
+        WHERE uid = NEW.uid;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_p_expense_trigger
+AFTER INSERT OR UPDATE ON expense
+FOR EACH ROW
+EXECUTE FUNCTION update_p_expense();
+
+DROP FUNCTION update_goal_status() CASCADE;
+CREATE FUNCTION update_goal_status() RETURNS TRIGGER AS $$
+BEGIN 
+    NEW.status := (
+        CASE 
+            WHEN (NEW.end_period >= NOW()::DATE AND NEW.p_expense <= NEW.goal_expense) THEN 'ongoing'
+            WHEN (NEW.end_period >= NOW()::DATE AND NEW.p_expense  > NEW.goal_expense) THEN 'failed'
+            WHEN (NEW.end_period  < NOW()::DATE AND NEW.p_expense <= NEW.goal_expense) THEN 'success'
+            WHEN (NEW.end_period  < NOW()::DATE AND NEW.p_expense  > NEW.goal_expense) THEN 'failed'
+        END
+    );
+    OLD.status := NEW.status;
+    RAISE NOTICE 'goal status: %', NEW.status;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_goal_status_trigger
+BEFORE UPDATE ON user_goal
+FOR EACH ROW
+EXECUTE FUNCTION update_goal_status();
+
 -- Base record for the reference table
 INSERT INTO
     expense_category (ec_name)
@@ -258,58 +315,106 @@ $$ LANGUAGE plpgsql;
 -- every expense that has 'orange' level will increase 2 points
 -- every expense that has 'red' level will reduce 5 points
 -- and every expense that has 'black' level will reduce 10 points
-DROP FUNCTION update_user_points() CASCADE;
-CREATE FUNCTION update_user_points() RETURNS TRIGGER AS $$
+DROP FUNCTION update_user_points(user_id TEXT, expense_id TEXT) CASCADE;
+
+-- CREATE NON TRIGGER FUNCTION that will update the user points
+CREATE FUNCTION update_user_points(user_id TEXT, new_percentage FLOAT) RETURNS VOID AS $$
 BEGIN
     DECLARE
-        user_id TEXT;
-        user_points INTEGER;
         expense_level VARCHAR(10);
+        added_points INTEGER;
     BEGIN
-        user_id := NEW.uid;
         expense_level := (
-            SELECT el.color_level
-            FROM expense e
-            JOIN expense_level el ON e.percentage BETWEEN el.percentage_range_lo AND el.percentage_range_hi
-            WHERE e.eid = NEW.eid
+           SELECT color_level
+           FROM expense_level
+           WHERE new_percentage BETWEEN percentage_range_lo AND percentage_range_hi
         );
 
         IF (expense_level = 'Green') THEN
             RAISE NOTICE 'user will get 10 points';
-            UPDATE users
-            SET points = points + 10
-            WHERE uid = user_id;
+            added_points := 10;
         ELSIF (expense_level = 'Yellow') THEN
             RAISE NOTICE 'user will get 4 points';
-            UPDATE users
-            SET points = points + 4
-            WHERE uid = user_id;
+            added_points := 4;
         ELSIF (expense_level = 'Orange') THEN
             RAISE NOTICE 'user will get 2 points';
-            UPDATE users
-            SET points = points + 2
-            WHERE uid = user_id;
+            added_points := 2;
         ELSIF (expense_level = 'Red') THEN
-            RAISE NOTICE 'user will lose 10 points';
-            UPDATE users
-            SET points = points - 10
-            WHERE uid = user_id;
+            RAISE NOTICE 'user will lose 5 points';
+            added_points := -5;
         ELSIF (expense_level = 'Black') THEN
-            RAISE NOTICE 'user will lose 15 points';
-            UPDATE users
-            SET points = points - 15
-            WHERE uid = user_id;
+            RAISE NOTICE 'user will lose 10 points';
+            added_points := -10;
         END IF;
+
+        UPDATE users
+        SET points = points + added_points
+        WHERE uid = user_id;
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- CREATE A TRIGGER FUNCTION that will update the user points
+DROP FUNCTION update_user_points_tr() CASCADE;
+CREATE FUNCTION update_user_points_tr() RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM update_user_points(NEW.uid, NEW.percentage);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add a trigger that will update the user points (INSERTION)
+CREATE TRIGGER update_user_points_trigger
+AFTER INSERT OR UPDATE ON expense
+FOR EACH ROW
+EXECUTE FUNCTION update_user_points_tr();
+
+-- This function is when the expense is edited, 
+-- point of the user will be subtracted by the old expense level 
+-- and added by the new expense level
+DROP FUNCTION adjust_user_point() CASCADE;
+CREATE FUNCTION adjust_user_point() RETURNS TRIGGER AS $$
+BEGIN
+    DECLARE
+        old_el_color VARCHAR(10); 
+        old_el_point INTEGER;
+        new_el_color VARCHAR(10);   
+        new_el_point INTEGER;
+    BEGIN 
+        old_el_color := (
+            SELECT el.color_level
+            FROM expense e
+            JOIN expense_level el ON e.percentage BETWEEN el.percentage_range_lo AND el.percentage_range_hi
+            WHERE e.eid = OLD.eid
+        );
+
+        IF (old_el_color = 'Green') THEN
+            old_el_point := 10;
+        ELSIF (old_el_color = 'Yellow') THEN
+            old_el_point := 4;
+        ELSIF (old_el_color = 'Orange') THEN
+            old_el_point := 2;
+        ELSIF (old_el_color = 'Red') THEN
+            old_el_point := -10;
+        ELSIF (old_el_color = 'Black') THEN
+            old_el_point := -15;
+        END IF;
+
+        UPDATE users
+        SET points = points - old_el_point
+        WHERE uid = OLD.uid;
+
+        RAISE NOTICE 'user will lose % points', old_el_point;
     END;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Add a trigger that will update the user points
-CREATE TRIGGER update_user_points_trigger
-AFTER INSERT OR UPDATE ON expense
+-- Add a trigger that will update the user points (UPDATE)
+CREATE TRIGGER adjust_user_point_trigger
+BEFORE UPDATE ON expense
 FOR EACH ROW
-EXECUTE FUNCTION update_user_points();
+EXECUTE FUNCTION adjust_user_point();
 
 -- A function that will return the summary of a user 
 CREATE FUNCTION get_user(user_id TEXT) RETURNS TABLE (
@@ -341,12 +446,6 @@ BEGIN
     FROM get_transactions(user_id);
 END;
 $$ LANGUAGE plpgsql;
-
--- NOT YET IMPLEMENTED : Goal Setter
-
-
-
-
 
 -- BELOW IS DEPRECATED AND TESTED QUERY
 -- A function that will return all the income category and its percentage
@@ -396,3 +495,6 @@ INSERT INTO expense (uid, ecid, amount, time, description) VALUES
     ('u1', 'ec3', 37000, '2018-01-01 00:17:00', 'Makan di warteg');
 INSERT INTO expense (uid, ecid, amount, time, description) VALUES 
     ('u1', 'ec4', 10000000, '2022-01-01 00:17:00', 'Beli S23');
+
+-- user goal logic test
+INSERT INTO user_goal (wid, goal_expense, end_period) VALUES ('w1', 1000000, '2022-01-01');

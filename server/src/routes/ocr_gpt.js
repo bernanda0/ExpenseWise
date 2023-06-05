@@ -10,7 +10,7 @@ const upload = multer({ storage: storage });
 
 const listParams = {
   key: "",
-  model: "text-davinci-002",
+  model: "text-davinci-003",
   prompt: "extract the date, amount, and one sentence description in JSON format:",
   temperature: 0.7,
   max_tokens: 256,

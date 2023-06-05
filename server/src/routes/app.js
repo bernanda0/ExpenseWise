@@ -4,13 +4,16 @@ const pool = require("../db.js");
 express().use(express.json());
 express().use(express.urlencoded({ extended: true }));
 
+const { SERVER_BASE_URL } = process.env;
+const baseUrl = `${SERVER_BASE_URL}/app`;
+
 // function to handle session, if user not loggin redierct to sessionError
 const sessionChecker = (req, res, next) => {
   console.log(req.session.passport);
   if (req.session.passport) {
     next();
   } else {
-    res.redirect("/app/sessionError");
+    res.redirect(baseUrl + "/sessionError");
   }
 }
 

@@ -12,14 +12,17 @@ const db = new Client({
   ssl: {
     rejectUnauthorized: false,
   },
+  idleTimeoutMillis: 0,
+  connectionTimeoutMillis: 0,
 });
 
 db.connect((err) => {
-  if (err) {
+  try {
+    console.log("Connected to Neon DB!");
+  } catch (error) {
     console.log(err);
     return;
-  }
-  console.log("Connected to Neon DB!");
+  } 
 });
 
 module.exports = db;

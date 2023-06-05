@@ -7,14 +7,15 @@ const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
 const connect_pg = require("connect-pg-simple");
-const auth_routes = require("./routes/auth.js");
-const app_routes = require("./routes/app.js");
-const ovo_routes = require("./routes/ovo.js");
-const gpt_routes = require("./routes/ocr_gpt.js");
-require("./passport.js");
+const serverless = require("serverless-http");
+const auth_routes = require("./src/routes/auth.js");
+const app_routes = require("./src/routes/app.js");
+const ovo_routes = require("./src/routes/ovo.js");
+const gpt_routes = require("./src/routes/ocr_gpt.js");
+require("./src/passport.js");
 
 // pg pool
-const pool = require("./db.js");
+const pool = require("./src/db.js");
 
 // Instantiate the express app and middleware
 const app = express();
@@ -48,13 +49,20 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// routing
-app.use("/auth", auth_routes);
-app.use("/app", app_routes);
-app.use("/ovo", ovo_routes);
-app.use("/gpt", gpt_routes);
+const router = express.Router();
+router.get("/", (req, res) => {
+  res.send("WELCOME TO EW API💸");
+});
 
-// start the app
+const { SERVER_BASE_URL } = process.env;
+// routing
+app.use(`${SERVER_BASE_URL}`, router) // path must route to lambda
+app.use(`${SERVER_BASE_URL}/auth`, auth_routes);
+app.use(`${SERVER_BASE_URL}/app`, app_routes);
+app.use(`${SERVER_BASE_URL}/ovo`, ovo_routes);
+app.use(`${SERVER_BASE_URL}/gpt`, gpt_routes);
+
 app.listen(process.env.PORT || 8463, () => {
+  console.log(`BESE SERVER URL ${SERVER_BASE_URL}`)
   console.log(`App Started on PORT ${process.env.PORT || 8463}`);
 });
