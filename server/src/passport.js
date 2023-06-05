@@ -6,7 +6,7 @@ const { Strategy: LocalStrategy } = require("passport-local").Strategy;
 
 // Importing modules
 const passport = require("passport");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const pool = require("./db");
 
 // Local Strategy
@@ -83,7 +83,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
+      callbackURL: process.env.SERVER_BASE_URL + "/auth/google/callback",
       scope: ["profile", "email"],
     },
     async (_, __, ____, profile, done) => {

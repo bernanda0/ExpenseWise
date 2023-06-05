@@ -2,9 +2,11 @@ const express = require("express");
 const router = express.Router();
 const passport = require("passport");
 const pool = require("../db.js");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
-// dummy home page
+const { SERVER_BASE_URL } = process.env;
+const baseUrl = `${SERVER_BASE_URL}/auth`;
+
 router.get("/", (req, res) => {
   if (req.user) {
     res.send(`Welcome ${req.user.username}`);
@@ -16,11 +18,14 @@ router.get("/", (req, res) => {
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "/auth/login/failed",
     session: true,
   }),
   (req, res) => {
-    res.redirect("/auth/login/success");
+    if (req.user) {
+      res.redirect(baseUrl + '/login/success');
+    } else {
+      res.redirect(baseUrl + '/login/fail');
+    }
   }
 );
 
@@ -32,9 +37,13 @@ router.get(
 // verify token from google login in android app
 router.post(
   "/google/verify_token",
-  passport.authenticate("google-id-token", { failureRedirect: "/auth/login/failed" }),
-  async (req, res) => {
-    res.redirect("/auth/login/success");
+  passport.authenticate("google-id-token"),
+  (req, res) => {
+    if (req.user) {
+      res.redirect(baseUrl + '/login/success');
+    } else {
+      res.redirect(baseUrl + '/login/fail');
+    }
   }
 );
 
@@ -68,7 +77,10 @@ router.get("/logout", (req, res) => {
     } else {
       req.session.destroy();
       console.log("User logged out");
-      res.redirect("/auth/");
+      res.status(200).json({
+        success: true,
+        message: "User logged out",
+      });
     }
   });
 });
@@ -105,7 +117,7 @@ router.post("/register", async (req, res) => {
           return next(err);
         }
         console.log("Automatic login successful");
-        return res.redirect("/auth/login/success");
+        return res.redirect(baseUrl + "/login/success");
       });
     }
   } catch (error) {
@@ -113,5 +125,25 @@ router.post("/register", async (req, res) => {
     res.status(400).send(error.message);
   }
 });
+
+router.post(
+  "/login/local",
+  (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.redirect(baseUrl + "/login/failed?message=" + encodeURIComponent(info.message));
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          return next(err);
+        }
+        return res.redirect(baseUrl + "/login/success");
+      });
+    })(req, res, next);
+  }
+);
 
 module.exports = router;
