@@ -34,7 +34,7 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// verify token from google login in android app
+
 router.post(
   "/google/verify_token",
   passport.authenticate("google-id-token"),
