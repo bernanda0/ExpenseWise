@@ -39,13 +39,7 @@ app.use(
     store: sessionStore,
   })
 );
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
+app.use(cors());
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -56,16 +50,11 @@ router.get("/", (req, res) => {
 
 const { SERVER_BASE_URL } = process.env;
 // routing
-app.use(`${SERVER_BASE_URL}`, router) // path must route to lambda
+app.use(`${SERVER_BASE_URL}`, router) 
 app.use(`${SERVER_BASE_URL}/auth`, auth_routes);
 app.use(`${SERVER_BASE_URL}/app`, app_routes);
 app.use(`${SERVER_BASE_URL}/ovo`, ovo_routes);
 app.use(`${SERVER_BASE_URL}/gpt`, gpt_routes);
-
-// start the app
-// app.listen(process.env.PORT || 8463, () => {
-//   console.log(`App Started on PORT ${process.env.PORT || 8463}`);
-// });
 
 // export the app
 module.exports = app;

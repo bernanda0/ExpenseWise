@@ -5,6 +5,7 @@
 CREATE SEQUENCE uid_seq START 1;
 CREATE SEQUENCE wid_seq START 1;
 CREATE SEQUENCE eid_seq START 1;
+CREATE SEQUENCE ugid_seq START 1;
 CREATE SEQUENCE iid_seq START 1;
 CREATE SEQUENCE ecid_seq START 1;
 CREATE SEQUENCE icid_seq START 1;
@@ -98,60 +99,14 @@ CREATE TABLE user_rank (
 
 -- Goal table
 CREATE TABLE user_goal (
+    ugid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('ug', nextval('ugid_seq')),
     uid TEXT REFERENCES users (uid) ON DELETE CASCADE UNIQUE,
     p_expense INTEGER DEFAULT 0,
     goal_expense INTEGER NOT NULL,
+    start_period DATE NOT NULL DEFAULT NOW()::DATE,
     end_period DATE NOT NULL,
     status TEXT NOT NULL DEFAULT 'ongoing'
 );
-
-INSERT INTO user_goal (uid, goal_expense, end_period) VALUES ('u1', 1000000, '2022-01-01');
-INSERT INTO expense (uid, ecid, amount, time, description) VALUES ('u1', 'ec1', 60000, '2021-12-23 00:17:00', 'Beli elektronik');
-UPDATE expense SET amount = 1200000 WHERE eid = 'e16';
-DELETE FROM user_goal WHERE uid = 'u1';
--- Trigger and function
--- every time there is new or updated expense, the trigger will update the p_expense in user_goal table
-CREATE FUNCTION update_p_expense() RETURNS TRIGGER AS $$
-BEGIN
-    IF (TG_OP = 'INSERT') THEN
-        UPDATE user_goal
-        SET p_expense = p_expense + NEW.amount
-        WHERE uid = NEW.uid;
-    ELSIF (TG_OP = 'UPDATE') THEN
-        UPDATE user_goal
-        SET p_expense = p_expense + NEW.amount - OLD.amount
-        WHERE uid = NEW.uid;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_p_expense_trigger
-AFTER INSERT OR UPDATE ON expense
-FOR EACH ROW
-EXECUTE FUNCTION update_p_expense();
-
-DROP FUNCTION update_goal_status() CASCADE;
-CREATE FUNCTION update_goal_status() RETURNS TRIGGER AS $$
-BEGIN 
-    NEW.status := (
-        CASE 
-            WHEN (NEW.end_period >= NOW()::DATE AND NEW.p_expense <= NEW.goal_expense) THEN 'ongoing'
-            WHEN (NEW.end_period >= NOW()::DATE AND NEW.p_expense  > NEW.goal_expense) THEN 'failed'
-            WHEN (NEW.end_period  < NOW()::DATE AND NEW.p_expense <= NEW.goal_expense) THEN 'success'
-            WHEN (NEW.end_period  < NOW()::DATE AND NEW.p_expense  > NEW.goal_expense) THEN 'failed'
-        END
-    );
-    OLD.status := NEW.status;
-    RAISE NOTICE 'goal status: %', NEW.status;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_goal_status_trigger
-BEFORE UPDATE ON user_goal
-FOR EACH ROW
-EXECUTE FUNCTION update_goal_status();
 
 -- Base record for the reference table
 INSERT INTO
@@ -280,6 +235,50 @@ BEFORE INSERT OR UPDATE ON expense
 FOR EACH ROW
 EXECUTE FUNCTION update_expense_details();
 
+-- Trigger and function
+-- every time there is new or updated expense, the trigger will update the p_expense in user_goal table
+CREATE FUNCTION update_p_expense() RETURNS TRIGGER AS $$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        UPDATE user_goal
+        SET p_expense = p_expense + NEW.amount
+        WHERE uid = NEW.uid;
+    ELSIF (TG_OP = 'UPDATE') THEN
+        UPDATE user_goal
+        SET p_expense = p_expense + NEW.amount - OLD.amount
+        WHERE uid = NEW.uid;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_p_expense_trigger
+AFTER INSERT OR UPDATE ON expense
+FOR EACH ROW
+EXECUTE FUNCTION update_p_expense();
+
+DROP FUNCTION update_goal_status() CASCADE;
+CREATE FUNCTION update_goal_status() RETURNS TRIGGER AS $$
+BEGIN 
+    NEW.status := (
+        CASE 
+            WHEN (NEW.end_period >= NOW()::DATE AND NEW.p_expense <= NEW.goal_expense) THEN 'ongoing'
+            WHEN (NEW.end_period >= NOW()::DATE AND NEW.p_expense  > NEW.goal_expense) THEN 'failed'
+            WHEN (NEW.end_period  < NOW()::DATE AND NEW.p_expense <= NEW.goal_expense) THEN 'success'
+            WHEN (NEW.end_period  < NOW()::DATE AND NEW.p_expense  > NEW.goal_expense) THEN 'failed'
+        END
+    );
+    OLD.status := NEW.status;
+    RAISE NOTICE 'goal status: %', NEW.status;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_goal_status_trigger
+BEFORE UPDATE ON user_goal
+FOR EACH ROW
+EXECUTE FUNCTION update_goal_status();
+
 -- A function to return all the transactions of a user
 CREATE FUNCTION get_transactions(user_id TEXT) RETURNS TABLE (
     tid TEXT,
@@ -354,7 +353,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- CREATE A TRIGGER FUNCTION that will update the user points
+-- A TRIGGER FUNCTION that will update the user points
 DROP FUNCTION update_user_points_tr() CASCADE;
 CREATE FUNCTION update_user_points_tr() RETURNS TRIGGER AS $$
 BEGIN
@@ -447,7 +446,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- BELOW IS DEPRECATED AND TESTED QUERY
 -- A function that will return all the income category and its percentage
 CREATE FUNCTION icat_percentage (user_id TEXT) RETURNS TABLE (
     ic_name VARCHAR(30),
@@ -480,21 +478,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- create example of income
-INSERT INTO income (uid, icid, amount, time, description) VALUES 
-    ('u1', 'ic1', 15000000, '2022-01-01 00:17:00', 'Bonus');
-INSERT INTO income (uid, icid, amount, time, description) VALUES 
-    ('u1', 'ic2', 10000000, '2021-01-01 00:17:00', 'Gaji');
 
--- create example of expense
-INSERT INTO expense (uid, ecid, amount, time, description) VALUES 
-    ('u1', 'ec1', 30000, '2020-01-01 00:17:00', 'Makan di warteg');
-INSERT INTO expense (uid, ecid, amount, time, description) VALUES 
-    ('u1', 'ec4', 320000, '2018-01-01 19:17:10', 'Beli tiket konser');
-INSERT INTO expense (uid, ecid, amount, time, description) VALUES 
-    ('u1', 'ec3', 37000, '2018-01-01 00:17:00', 'Makan di warteg');
-INSERT INTO expense (uid, ecid, amount, time, description) VALUES 
-    ('u1', 'ec4', 10000000, '2022-01-01 00:17:00', 'Beli S23');
-
--- user goal logic test
-INSERT INTO user_goal (wid, goal_expense, end_period) VALUES ('w1', 1000000, '2022-01-01');
+---
+INSERT INTO user_goal (uid, goal_expense, end_period) VALUES ('u1', 100000, '2023-6-18');
+INSERT INTO expense (uid, ecid, amount, time, description) VALUES ('u1', 'ec1', 60000, '2021-12-23 00:17:00', 'Beli elektronik');
+UPDATE expense SET amount = 1200000 WHERE eid = 'e16';
+DELETE FROM user_goal WHERE uid = 'u1';

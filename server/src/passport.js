@@ -22,6 +22,13 @@ passport.use(
           email,
         ]);
         if (user.rows.length > 0) {
+          // check if the user is already logged in using google
+          if (user.rows[0].password === null) {
+            console.log("User already logged in using Google Account");
+            done(null, false, {
+              message: "User already logged in using Google Account. \n Login via Google instead",
+            });
+          }  
           const isMatch = await bcrypt.compare(password, user.rows[0].password);
           if (isMatch) {
             console.log("User successfully logged in!");
@@ -29,7 +36,7 @@ passport.use(
           } else {
             console.log("Incorrect password");
             done(null, false, { message: "Incorrect password" });
-          }
+          } 
         } else {
           console.log("User not registered");
           done(null, false, { message: "User not registered" });

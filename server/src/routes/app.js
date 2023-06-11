@@ -15,7 +15,7 @@ const sessionChecker = (req, res, next) => {
   } else {
     res.redirect(baseUrl + "/sessionError");
   }
-}
+};
 
 router.get("/sessionError", (req, res) => {
   res.status(401).json({
@@ -50,10 +50,10 @@ router.get("/wallet", sessionChecker, async (req, res) => {
     const uid = req.session.passport.user;
     const query =
       "SELECT * FROM wallet WHERE wid = (SELECT wid FROM users WHERE uid = $1);";
-    const balance = await pool.query(query, [uid]);
+    const wallet = await pool.query(query, [uid]);
     res.status(200).json({
       success: true,
-      balance: balance.rows[0],
+      wallet: wallet.rows[0],
     });
   } catch (err) {
     console.error(err.message);
@@ -65,10 +65,11 @@ router.get("/wallet", sessionChecker, async (req, res) => {
 });
 
 // All the transaction
-router.get("/transactions", sessionChecker, async (req, res) => {
+router.get("/transaction/getAll", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
-    const query = "SELECT * FROM get_transactions($1);";
+    // sort by t_time
+    const query = "SELECT * FROM get_transactions($1) ORDER BY t_time DESC;";
     const transactions = await pool.query(query, [uid]);
     res.status(200).json({
       success: true,
@@ -83,32 +84,59 @@ router.get("/transactions", sessionChecker, async (req, res) => {
   }
 });
 
+router.get("/transaction/getOne", sessionChecker, async (req, res) => {
+  try {
+    const uid = req.session.passport.user;
+    const { tid } = req.body;
+    const query = "SELECT * FROM get_transactions($1) WHERE tid = $2;";
+    const transaction = await pool.query(query, [uid, tid]);
+    res.status(200).json({
+      success: true,
+      transaction: transaction.rows[0],
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot get transaction",
+    });
+  }
+});
+
 // Get the json summary for downloading
 router.get("/summary", sessionChecker, async (req, res) => {
   try {
     let summary = {
-      user : {
+      user: {
         username: "",
         email: "",
         occupation: "",
       },
-      time_range : {
+      time_range: {
         start: "",
         end: "",
       },
-      wallet : {
+      wallet: {
         balance: 0,
         total_income: 0,
         total_expense: 0,
       },
       transactions: [],
-    }
+    };
     const uid = req.session.passport.user;
     const user = await pool.query("SELECT * FROM users WHERE uid = $1;", [uid]);
-    const time_range = await pool.query("SELECT * FROM get_time_range($1);", [uid]);
-    const wallet = await pool.query("SELECT * FROM wallet WHERE wid = (SELECT wid FROM users WHERE uid = $1);", [uid]);
-    const transactions_query = await pool.query("SELECT * FROM get_transactions($1);", [uid]);
-    
+    const time_range = await pool.query("SELECT * FROM get_time_range($1);", [
+      uid,
+    ]);
+    const wallet = await pool.query(
+      "SELECT * FROM wallet WHERE wid = (SELECT wid FROM users WHERE uid = $1);",
+      [uid]
+    );
+    const transactions_query = await pool.query(
+      "SELECT * FROM get_transactions($1);",
+      [uid]
+    );
+
     // user summary
     summary.user.username = user.rows[0].username;
     summary.user.email = user.rows[0].email;
@@ -128,19 +156,20 @@ router.get("/summary", sessionChecker, async (req, res) => {
       let temp = {
         description: transaction.t_description,
         amount: transaction.t_amount,
-        transaction_type: transaction.tid.startsWith("i") ? "income" : "expense",
+        transaction_type: transaction.tid.startsWith("i")
+          ? "income"
+          : "expense",
         category: transaction.t_category,
         time: transaction.t_time,
-      }
+      };
       summary.transactions.push(temp);
-    })
+    });
 
     console.log(summary);
     res.status(200).json({
       success: true,
       summary: summary,
     });
-  
   } catch (err) {
     console.error(err.message);
     res.status(500).json({
@@ -149,7 +178,6 @@ router.get("/summary", sessionChecker, async (req, res) => {
     });
   }
 });
-
 
 // Get the all category of income and its percentage
 router.get("/income/category", sessionChecker, async (req, res) => {
@@ -339,6 +367,96 @@ router.delete("/expense/delete", sessionChecker, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Cannot delete expense",
+    });
+  }
+});
+
+// Goal get
+router.get("/goal", sessionChecker, async (req, res) => {
+  try {
+    const uid = req.session.passport.user;
+    const query = "SELECT * FROM user_goal WHERE uid = $1;";
+    const goal = await pool.query(query, [uid]);
+    res.status(200).json({
+      success: true,
+      goal: goal.rows[0],
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot get goal",
+    });
+  }
+});
+
+// Goal insert
+router.post("/goal/insert", sessionChecker, async (req, res) => {
+  try {
+    const uid = req.session.passport.user;
+    const { goal_expense, end_period } = req.body;
+    const query = `INSERT INTO user_goal (uid, goal_expense, end_period) VALUES
+        ($1, $2, $3) RETURNING *;`;
+    const inserted_goal = await pool.query(query, [
+      uid,
+      goal_expense,
+      end_period,
+    ]);
+    res.status(200).json({
+      success: true,
+      goal: inserted_goal.rows[0],
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot insert goal",
+    });
+  }
+});
+
+// Goal update
+router.put("/goal/update", sessionChecker, async (req, res) => {
+  try {
+    const uid = req.session.passport.user;
+    const { gid, goal_expense, end_period } = req.body;
+    const query = `UPDATE user_goal SET goal_expense = $1, end_period = $2
+        WHERE gid = $3 AND uid = $4 RETURNING *;`;
+    const updated_goal = await pool.query(query, [
+      goal_expense,
+      end_period,
+      gid,
+      uid,
+    ]);
+    res.status(200).json({
+      success: true,
+      goal: updated_goal.rows[0],
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot update goal",
+    });
+  }
+});
+
+// Goal delete
+router.delete("/goal/delete", sessionChecker, async (req, res) => {
+  try {
+    const uid = req.session.passport.user;
+    const { gid } = req.body;
+    const query = `DELETE FROM user_goal WHERE gid = $1 AND uid = $2 RETURNING *;`;
+    const deleted_goal = await pool.query(query, [gid, uid]);
+    res.status(200).json({
+      success: true,
+      goal: deleted_goal.rows[0],
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Cannot delete goal",
     });
   }
 });
