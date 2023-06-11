@@ -1,5 +1,5 @@
 -- EXPENSE WISE SQL DUMP
--- Version 1.0
+-- Version 2.0
 
 -- Sequence for serial
 CREATE SEQUENCE uid_seq START 1;
@@ -477,7 +477,6 @@ BEGIN
     ORDER BY 2 DESC;
 END;
 $$ LANGUAGE plpgsql;
-
 
 ---
 INSERT INTO user_goal (uid, goal_expense, end_period) VALUES ('u1', 100000, '2023-6-18');

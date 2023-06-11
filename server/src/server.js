@@ -50,6 +50,7 @@ router.get("/", (req, res) => {
 
 const { SERVER_BASE_URL } = process.env;
 // routing
+
 app.use(`${SERVER_BASE_URL}`, router) 
 app.use(`${SERVER_BASE_URL}/auth`, auth_routes);
 app.use(`${SERVER_BASE_URL}/app`, app_routes);
