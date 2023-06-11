@@ -92,10 +92,10 @@ router.post("/register", async (req, res) => {
       email,
     ]);
     if (user.rows.length > 0) {
-      console.log("User already registered");
+      console.log("Email already registered");
       res.status(400).json({
         success: false,
-        message: "User already registered",
+        message: "Email already registered",
       });
     } else {
       // Create new wallet for new user
@@ -110,7 +110,7 @@ router.post("/register", async (req, res) => {
         "INSERT INTO users (username, email, password, wid) VALUES ($1, $2, $3, $4) RETURNING *",
         [username, email, bcryptPassword, walletId]
       );
-      console.log("User successfully registered");
+      console.log("Email successfully registered");
       req.login(newUser.rows[0].uid, (err) => {
         if (err) {
           console.log(err);

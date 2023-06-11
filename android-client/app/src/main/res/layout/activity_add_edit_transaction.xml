@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AddEditTransactionActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar1"
+        style="@style/Widget.MaterialComponents.AppBarLayout.PrimarySurface"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar1"
+            style="@style/Widget.MaterialComponents.Toolbar.PrimarySurface"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/white"
+            app:navigationIconTint="@color/black"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.DayNight"
+            app:subtitleTextColor="@color/black"
+            app:title="Add/Edit Transaction"
+            app:titleTextColor="@color/black" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:backgroundTint="@color/white"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="3dp"
+                    android:src="@drawable/ic_baseline_image_24" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/upload_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/rounded_edge"
+                    android:backgroundTint="@color/primary_700">
+
+                    <TextView
+                        android:id="@+id/up_img_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="Upload receipt (optional)"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_bias="0.517" />
+
+                    <ImageView
+                        android:id="@+id/up_img_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="16dp"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_baseline_add_circle_24"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tint="@color/white" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/uploadedImage"
+                android:layout_marginStart="48dp"
+                android:layout_width="match_parent"
+                android:layout_height="224dp"
+                android:layout_marginTop="10dp"
+                tools:srcCompat="@tools:sample/avatars"
+                android:visibility="gone"/>
+
+            <LinearLayout
+                android:id="@+id/parse_action_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="48dp"
+                android:layout_marginTop="16dp"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/parse_button"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rounded_edge"
+                    android:layout_marginEnd="16dp"
+                    android:textColor="@color/white"
+                    android:drawableEnd="@drawable/ic_baseline_play_arrow_24"
+                    android:drawableTint="@color/white"
+                    android:text="Parse"
+                    android:textSize="11dp"/>
+
+                <Button
+                    android:id="@+id/discard_button"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/rounded_edge"
+                    android:textColor="@color/white"
+                    android:drawableEnd="@drawable/ic_baseline_cancel_24"
+                    android:drawableTint="@color/white"
+                    android:text="Discard"
+                    android:textSize="11dp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Detail Transactions"
+                android:textColor="@color/black"
+                android:textSize="18dp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="3dp"
+                    android:text="Rp"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:textColorHint="@color/black"
+                    app:boxStrokeColor="@color/black">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/transaction_amount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Transaction Amount"
+                        android:inputType="number"
+                        android:textColor="@color/black"/>
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+            <RadioGroup
+                android:id="@+id/radioGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:orientation="horizontal"
+                android:layout_marginStart="48dp"
+                android:layout_marginTop="8dp">
+
+                <RadioButton
+                    android:id="@+id/radioButtonIncome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Income"
+                    android:textSize="10dp"
+                    android:textColor="@color/black"
+                    android:layout_marginEnd="12dp"/>
+
+                <RadioButton
+                    android:id="@+id/radioButtonExpense"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Expense"
+                    android:textColor="@color/black"
+                    android:textSize="10dp"/>
+
+            </RadioGroup>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="3dp"
+                    android:src="@drawable/ic_baseline_category_24" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/transaction_category"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    app:endIconDrawable="@drawable/ic_baseline_keyboard_arrow_down_24"
+                    app:endIconMode="custom"
+                    app:endIconTint="@color/primary_700"
+                    android:textColorHint="@color/black"
+                    app:boxStrokeColor="@color/black">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/transaction_category_dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:paddingStart="16dp"
+                        android:focusable="false"
+                        android:hint="Category"
+                        android:inputType="none"
+                        android:textSize="16dp"
+                        android:text="Others"
+                        android:textColor="@color/black"/>
+
+                    <requestFocus />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/checkBox"
+                android:layout_marginStart="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:textSize="10dp"
+                android:text="Now Date"
+                android:textColor="@color/black"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="3dp"
+                    android:src="@drawable/ic_baseline_calendar_month_24" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/transaction_date"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    app:endIconDrawable="@drawable/ic_baseline_calendar_month_24"
+                    app:endIconMode="custom"
+                    app:endIconTint="@color/primary_700"
+                    android:textColorHint="@color/black"
+                    app:boxStrokeColor="@color/black">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/selectedDateText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:hint="Date"
+                        android:inputType="text"
+                        android:textColor="@color/black"/>
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="3dp"
+                    android:src="@drawable/ic_baseline_description_24" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:textColorHint="@color/black"
+                    app:boxStrokeColor="@color/black">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/transaction_description"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Description"
+                        android:inputType="text"
+                        android:textColor="@color/black"/>
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/transaction_save_button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginVertical="18dp"
+                android:text="Save or Update"
+                android:textAllCaps="false"
+                app:cornerRadius="21dp"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/primary_700"/>
+        </LinearLayout>
+    </ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -9,6 +9,34 @@ public class User {
     private int points;
     private String user_rank;
 
+    public String getUsername() {
+        return username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getImg() {
+        return img;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getOccupation() {
+        return occupation;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public String getUser_rank() {
+        return user_rank;
+    }
+
     @Override
     public String toString() {
         return "User{" +

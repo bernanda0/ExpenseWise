@@ -54,7 +54,6 @@ router.post("/parse-receipt", upload.single("receipt"), async (req, res) => {
     // convert to JSON
     const gpt_response = response.data.choices[0].text;
     const gpt_json = JSON.parse(gpt_response);
-
     console.log(text);
     console.log(response.data.choices[0].text);
 

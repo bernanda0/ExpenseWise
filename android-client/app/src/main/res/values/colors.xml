@@ -6,9 +6,26 @@
     <color name="primary_500">#55647F</color>
     <color name="primary_400">#867EA0</color>
     <color name="primary_300">#BD99BA</color>
-    <color name="primary_200">#F4B5CB</color>
+    <color name="primary_200">#F4B6DC</color>
     <color name="primary_100">#FDEAF1</color>
-    
+    <color name="secondary_600">#2B468B</color>
+    <color name="secondary_400">#516DB6</color>
+    <color name="secondary_200">#C0D8FC</color>
+    <color name="accent">@color/yellow</color>
     <color name="black">#000000</color>
+    <color name="black12">#FFE0E0E0</color>
+    <color name="disabled_button_color">#BDBDBD</color>
     <color name="white">#FFFFFF</color>
+    <color name="red">#FF0000</color>
+    <color name="red_secondary">#FFF1F1</color>
+    <color name="orange">#FF6F00</color>
+    <color name="orange_secondary">#FFF3E0</color>
+    <color name="yellow">#FFB93F</color>
+    <color name="yellow_secondary">#FFF8E1</color>
+    <color name="green">#1CAE57</color>
+    <color name="green_secondary">#E8FFF1</color>
+    <color name="blue">#1E88E5</color>
+    <color name="blue_secondary">#E3F2FD</color>
+    <color name="purple">#7C4DFF</color>
+    <color name="purple_secondary">#F3E5FF</color>
 </resources>
