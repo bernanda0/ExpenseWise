@@ -1,5 +1,6 @@
 package com.client.expensewise;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
@@ -12,12 +13,12 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.util.Pair;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,7 +28,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,8 +40,13 @@ import com.client.expensewise.model.Transaction;
 import com.client.expensewise.model.response.ExpenseResponse;
 import com.client.expensewise.model.response.IncomeResponse;
 import com.client.expensewise.model.response.ParseResponse;
-import com.client.expensewise.model.response.WalletResponse;
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.DateValidatorPointBackward;
+import com.google.android.material.datepicker.DateValidatorPointForward;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -49,11 +54,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.concurrent.atomic.AtomicReference;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -63,10 +68,12 @@ public class AddEditTransactionActivity extends AppCompatActivity {
     BaseApiService mApiService;
     Context mContext;
     String action = null;
+    String selectedTid = null;
     RadioGroup catRadioGroup = null;
     AutoCompleteTextView chooseCat = null;
     CheckBox nowDate = null;
     Button saveEditButton = null;
+    TextInputLayout dateLayout = null;
     TextInputEditText dateText = null;
     TextInputEditText amountText = null;
     TextInputEditText descriptionText = null;
@@ -113,6 +120,7 @@ public class AddEditTransactionActivity extends AppCompatActivity {
         nowDate = this.findViewById(R.id.checkBox);
         dateText = this.findViewById(R.id.selectedDateText);
         amountText = this.findViewById(R.id.transaction_amount);
+        dateLayout = this.findViewById(R.id.transaction_date);
         descriptionText = this.findViewById(R.id.transaction_description);
         saveEditButton = this.findViewById(R.id.transaction_save_button);
         uploadImage = this.findViewById(R.id.upload_image);
@@ -160,6 +168,7 @@ public class AddEditTransactionActivity extends AppCompatActivity {
         this.getSupportActionBar().setDisplayShowHomeEnabled(true);
 
         this.action = getIntent().getStringExtra("action");
+        this.selectedTid = getIntent().getStringExtra("tid");
 
         if (this.action.equals("add")) {
             this.getSupportActionBar().setTitle("Add Transaction");
@@ -167,8 +176,26 @@ public class AddEditTransactionActivity extends AppCompatActivity {
         } else if (this.action.equals("edit")) {
             this.getSupportActionBar().setTitle("Edit Transaction");
             this.saveEditButton.setText("Update");
-//            TO DO
-//            populate the view with the transaction details
+            Transaction selectedTransaction = null;
+            for (Transaction t : TransactionActivity.transactions) {
+                if (t.getTid().equals(this.selectedTid)) {
+                    selectedTransaction = t;
+                    break;
+                }
+            }
+            if (selectedTransaction != null) {
+                if (selectedTransaction.getTid().startsWith("i")) {
+                    catRadioGroup.check(R.id.radioButtonIncome);
+                    adapter = new ArrayAdapter(mContext, R.layout.dropdown_cat, incomeCatList);
+                } else {
+                    catRadioGroup.check(R.id.radioButtonExpense);
+                    adapter = new ArrayAdapter(mContext, R.layout.dropdown_cat, expenseCatList);
+                }
+                chooseCat.setText(selectedTransaction.getT_category());
+                dateText.setText(ExpenseWiseToolClass.formatDateString(selectedTransaction.getT_date()));
+                amountText.setText(selectedTransaction.getT_amount().toString());
+                descriptionText.setText(selectedTransaction.getT_description());
+            }
         }
 
         catRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -218,12 +245,18 @@ public class AddEditTransactionActivity extends AppCompatActivity {
                 totalAmount = Integer.parseInt(amountText.getText().toString());
                 description = descriptionText.getText().toString();
                 if (validForm()) {
-                    if (selectedCategory.startsWith("e")) {
-                        Toast.makeText(mContext, "Adding income...", Toast.LENGTH_SHORT).show();
-                        requestInsertExpense();
-                    } else if (selectedCategory.startsWith("i")) {
+                    if (selectedCategory.startsWith("e") && action.equals("add")) {
                         Toast.makeText(mContext, "Adding expense...", Toast.LENGTH_SHORT).show();
+                        requestInsertExpense();
+                    } else if (selectedCategory.startsWith("i") && action.equals("add")) {
+                        Toast.makeText(mContext, "Adding income...", Toast.LENGTH_SHORT).show();
                         requestInsertIncome();
+                    } else if (selectedCategory.startsWith("e") && action.equals("edit")) {
+                        Toast.makeText(mContext, "Updating expense...", Toast.LENGTH_SHORT).show();
+                        requestUpdateExpense();
+                    } else if (selectedCategory.startsWith("i") && action.equals("edit")) {
+                        Toast.makeText(mContext, "Updating income...", Toast.LENGTH_SHORT).show();
+                        requestUpdateIncome();
                     }
                 }
             }
@@ -246,6 +279,72 @@ public class AddEditTransactionActivity extends AppCompatActivity {
             }
         });
 
+        dateText.setOnClickListener( v -> {
+            AlertDialog dialog = new AlertDialog.Builder(mContext).create();
+            LayoutInflater inflater = getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_date_setter, null);
+            TextInputLayout editTextDate = dialogView.findViewById(R.id.editTextDate);
+            TextInputLayout editTextTime = dialogView.findViewById(R.id.editTextTime);
+            Button saveDate = dialogView.findViewById(R.id.buttonSaveDate);
+            CheckBox usingTime = dialogView.findViewById(R.id.checkBoxUsingTime);
+            AtomicReference<Boolean> isUsingTime = new AtomicReference<>(true);
+            AtomicReference<String> theDate = new AtomicReference<>();
+            AtomicReference<String> theTime = new AtomicReference<>();
+
+            editTextDate.getEditText().setOnClickListener(t -> {
+                MaterialDatePicker.Builder builder = MaterialDatePicker.Builder.datePicker().setTheme(R.style.MaterialCalendarTheme);
+                builder.setTitleText("Select Date");
+                builder.setCalendarConstraints(new CalendarConstraints.Builder().setValidator(DateValidatorPointBackward.now()).build());
+                MaterialDatePicker datePicker = builder.build();
+                datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
+                datePicker.addOnPositiveButtonClickListener(selection -> {
+                    String date = ExpenseWiseToolClass.longToDate((Long) selection);
+                    editTextDate.getEditText().setText(date);
+                    theDate.set(date);
+                });
+            });
+
+            usingTime.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    isUsingTime.set(true);
+                } else {
+                    isUsingTime.set(false);
+                    editTextTime.getEditText().setText("00:00:00");
+                    theTime.set("00:00:00");
+                }
+            });
+            if (isUsingTime.get()) {
+                editTextTime.getEditText().setOnClickListener(t -> {
+                    MaterialTimePicker.Builder builder = new MaterialTimePicker.Builder().setTheme(R.style.MaterialTimePickerTheme);
+                    builder.setTitleText("Select Time");
+                    MaterialTimePicker timePicker = builder.build();
+                    timePicker.show(getSupportFragmentManager(), "TIME_PICKER");
+                    timePicker.addOnPositiveButtonClickListener(selection -> {
+                        String time = timePicker.getHour()+":"+timePicker.getMinute();
+                        String formattedTime = ExpenseWiseToolClass.StringToTime(time);
+                        editTextTime.getEditText().setText(formattedTime);
+                        theTime.set(formattedTime);
+                    });
+                });
+            }
+            saveDate.setOnClickListener(t -> {
+                Toast.makeText(mContext, "Date saved", Toast.LENGTH_SHORT).show();
+                selectedDate = theDate.get() + " " + theTime.get();
+                dateText.setText(selectedDate);
+                dialog.dismiss();
+            });
+            dialog.setView(dialogView);
+            dialog.setCancelable(true);
+            dialog.show();
+        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     protected void requestReceiptParser() {
@@ -304,7 +403,6 @@ public class AddEditTransactionActivity extends AppCompatActivity {
                     Intent intent = new Intent(mContext, MainActivity.class);
                     intent.putExtra("transaction_updated", true);
                     startActivity(intent);
-
                 } else {
                     Toast.makeText(mContext, ""+res.getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -314,6 +412,43 @@ public class AddEditTransactionActivity extends AppCompatActivity {
             public void onFailure(Call<IncomeResponse> call, Throwable t) {
                 System.out.println(t.getMessage());
                 Toast.makeText(mContext, "Failed to add income", Toast.LENGTH_SHORT).show();
+            }
+        });
+        return null;
+    }
+    protected Income requestUpdateIncome() {
+        mApiService.updateIncome(selectedTid, selectedCategory, totalAmount, selectedDate, description).enqueue(new Callback<IncomeResponse>() {
+            @Override
+            public void onResponse(Call<IncomeResponse> call, Response<IncomeResponse> response) {
+                IncomeResponse res = response.body();
+                if (res == null) {
+                    Gson gson = new Gson();
+                    try {
+                        IncomeResponse errorResponse = gson.fromJson(response.errorBody().string(), IncomeResponse.class);
+                        res = errorResponse;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (res.isSuccess()) {
+                    Toast.makeText(mContext, "Income updated successfully", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(mContext, MainActivity.class);
+                    intent.putExtra("transaction_updated", true);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(mContext, ""+res.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<IncomeResponse> call, Throwable t) {
+                System.out.println(t.getMessage());
+                Toast.makeText(mContext, "Failed to update income", Toast.LENGTH_SHORT).show();
             }
         });
         return null;
@@ -352,6 +487,44 @@ public class AddEditTransactionActivity extends AppCompatActivity {
             public void onFailure(Call<ExpenseResponse> call, Throwable t) {
                 System.out.println(t.getMessage());
                 Toast.makeText(mContext, "Failed to add expense", Toast.LENGTH_SHORT).show();
+            }
+        });
+        return null;
+    }
+    protected Expense requestUpdateExpense() {
+        mApiService.updateExpense(selectedTid, selectedCategory, totalAmount, selectedDate, description).enqueue(new Callback<ExpenseResponse>() {
+            @Override
+            public void onResponse(Call<ExpenseResponse> call, Response<ExpenseResponse> response) {
+                System.out.println("#RESPONSE " + response);
+                ExpenseResponse res = response.body();
+                if (res == null) {
+                    Gson gson = new Gson();
+                    try {
+                        ExpenseResponse errorResponse = gson.fromJson(response.errorBody().string(), ExpenseResponse.class);
+                        res = errorResponse;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (res.isSuccess()) {
+                    Toast.makeText(mContext, "Expense updated successfully", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(mContext, MainActivity.class);
+                    intent.putExtra("transaction_updated", true);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(mContext, ""+res.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ExpenseResponse> call, Throwable t) {
+                System.out.println(t.getMessage());
+                Toast.makeText(mContext, "Failed to update expense", Toast.LENGTH_SHORT).show();
             }
         });
         return null;

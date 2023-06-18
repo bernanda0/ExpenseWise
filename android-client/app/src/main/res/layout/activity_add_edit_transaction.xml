@@ -276,9 +276,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_weight="1"
-                    app:endIconDrawable="@drawable/ic_baseline_calendar_month_24"
-                    app:endIconMode="custom"
-                    app:endIconTint="@color/primary_700"
                     android:textColorHint="@color/black"
                     app:boxStrokeColor="@color/black">
 
@@ -286,7 +283,7 @@
                         android:id="@+id/selectedDateText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:focusable="true"
+                        android:focusable="false"
                         android:hint="Date"
                         android:inputType="text"
                         android:textColor="@color/black"/>

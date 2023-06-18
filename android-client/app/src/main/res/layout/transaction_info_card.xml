@@ -44,7 +44,7 @@
                 app:srcCompat="@android:color/transparent" />
 
             <TextView
-                android:id="@+id/textView4"
+                android:id="@+id/transaction_amount2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="3dp"
@@ -65,173 +65,189 @@
                 android:layout_marginTop="12dp"
                 android:layerType="software"
                 android:src="@drawable/garis_putus"
-                app:layout_constraintTop_toBottomOf="@+id/textView4"
+                app:layout_constraintTop_toBottomOf="@+id/transaction_amount2"
                 tools:layout_editor_absoluteX="16dp" />
 
             <LinearLayout
-                android:id="@+id/linearLayout"
+                android:id="@id/linearLayout6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="18dp"
-                android:layout_marginTop="18dp"
-                android:gravity="center_vertical"
-                app:layout_constraintTop_toBottomOf="@+id/imageView4"
-                tools:layout_editor_absoluteX="-16dp">
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/imageView4">
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_baseline_category_24" />
-
-                <TextView
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="48dp"
-                    android:text="Category"
-                    android:textSize="10sp"
-                    android:textColor="@color/black" />
-
-                <TextView
+                <LinearLayout
+                    android:id="@+id/linearLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Entertainment"
-                    android:textColor="@color/black"
-                    android:textSize="11sp" />
-            </LinearLayout>
+                    android:layout_marginHorizontal="18dp"
+                    android:layout_marginTop="18dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintTop_toBottomOf="@+id/imageView4"
+                    tools:layout_editor_absoluteX="-16dp">
 
-            <LinearLayout
-                android:id="@+id/linearLayout2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="18dp"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout"
-                tools:layout_editor_absoluteX="18dp">
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_baseline_category_24" />
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_baseline_calendar_month_24" />
+                    <TextView
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="48dp"
+                        android:text="Category"
+                        android:textColor="@color/black"
+                        android:textSize="10sp" />
 
-                <TextView
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="48dp"
-                    android:text="Date"
-                    android:textSize="10sp"
-                    android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/transaction_category2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Entertainment"
+                        android:textColor="@color/black"
+                        android:textSize="11sp" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/linearLayout2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="2023-06-11 12:10:40"
-                    android:textColor="@color/black"
-                    android:textSize="11sp" />
-            </LinearLayout>
+                    android:layout_marginHorizontal="18dp"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+                    tools:layout_editor_absoluteX="18dp">
 
-            <LinearLayout
-                android:id="@+id/linearLayout3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="18dp"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-                tools:layout_editor_absoluteX="18dp">
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_baseline_calendar_month_24" />
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_baseline_percent_24" />
+                    <TextView
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="48dp"
+                        android:text="Date"
+                        android:textColor="@color/black"
+                        android:textSize="10sp" />
 
-                <TextView
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="48dp"
-                    android:text="Percentage"
-                    android:textSize="10sp"
-                    android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/transaction_date2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="2023-06-11 12:10:40"
+                        android:textColor="@color/black"
+                        android:textSize="11sp" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/linearLayoutPercentage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="26.23%"
-                    android:textColor="@color/black"
-                    android:textSize="11sp" />
-            </LinearLayout>
+                    android:layout_marginHorizontal="18dp"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
+                    tools:layout_editor_absoluteX="18dp">
 
-            <LinearLayout
-                android:id="@+id/linearLayout4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="18dp"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout3"
-                tools:layout_editor_absoluteX="18dp">
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_baseline_percent_24" />
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_baseline_bar_chart_24" />
+                    <TextView
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="48dp"
+                        android:text="Percentage"
+                        android:textColor="@color/black"
+                        android:textSize="10sp" />
 
-                <TextView
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="48dp"
-                    android:text="Level"
-                    android:textSize="10sp"
-                    android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/transaction_percentage2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="26.23%"
+                        android:textColor="@color/black"
+                        android:textSize="11sp" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/linearLayoutLevel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Yellow"
-                    android:textSize="11sp"
-                    android:textColor="@color/black" />
+                    android:layout_marginHorizontal="18dp"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintTop_toBottomOf="@+id/linearLayoutPercentage"
+                    tools:layout_editor_absoluteX="18dp">
 
-            </LinearLayout>
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_baseline_bar_chart_24" />
 
-            <LinearLayout
-                android:id="@+id/linearLayout5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="18dp"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout4"
-                tools:layout_editor_absoluteX="18dp">
+                    <TextView
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="48dp"
+                        android:text="Level"
+                        android:textColor="@color/black"
+                        android:textSize="10sp" />
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:src="@drawable/ic_baseline_notes_24" />
+                    <TextView
+                        android:id="@+id/transaction_level2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Yellow"
+                        android:textColor="@color/black"
+                        android:textSize="11sp" />
 
-                <TextView
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="48dp"
-                    android:text="Description"
-                    android:textSize="10sp"
-                    android:textColor="@color/black" />
+                </LinearLayout>
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/linearLayout5"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="buang uang"
-                    android:textSize="11sp"
-                    android:textColor="@color/black" />
+                    android:layout_marginHorizontal="18dp"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
+                    tools:layout_editor_absoluteX="18dp">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_baseline_notes_24" />
+
+                    <TextView
+                        android:layout_width="72dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="48dp"
+                        android:text="Description"
+                        android:textColor="@color/black"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/transaction_description2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="buang uang"
+                        android:textColor="@color/black"
+                        android:textSize="11sp" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
             <TextView
-                android:id="@+id/textView5"
+                android:id="@+id/info_for_expense"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginHorizontal="24dp"
@@ -239,7 +255,7 @@
                 android:text="* \nPercentage is calculated based on the total amount of the transaction divided by the total balance at that time."
                 android:textColor="@color/black"
                 android:textSize="10sp"
-                app:layout_constraintTop_toBottomOf="@+id/linearLayout5"
+                app:layout_constraintTop_toBottomOf="@+id/linearLayout6"
                 tools:layout_editor_absoluteX="21dp" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -250,7 +266,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="24dp"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
         app:layout_constraintBottom_toBottomOf="parent"

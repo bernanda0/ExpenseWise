@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../db.js");
+const pool = require("../db/db.js");
 express().use(express.json());
 express().use(express.urlencoded({ extended: true }));
 
@@ -71,6 +71,10 @@ router.get("/transaction/getAll", sessionChecker, async (req, res) => {
     // sort by t_time
     const query = "SELECT * FROM get_transactions($1) ORDER BY t_time DESC;";
     const transactions = await pool.query(query, [uid]);
+    // if the returned value is only one change it to array
+    if (transactions.rows.length === 1) {
+      transactions.rows = [transactions.rows];
+    }
     res.status(200).json({
       success: true,
       transactions: transactions.rows,
@@ -377,6 +381,10 @@ router.get("/goal", sessionChecker, async (req, res) => {
     const uid = req.session.passport.user;
     const query = "SELECT * FROM user_goal WHERE uid = $1;";
     const goal = await pool.query(query, [uid]);
+    // if the returned value is only one change it to array
+    if (goal.rows.length === 1) {
+      goal.rows = [goal.rows];
+    }
     res.status(200).json({
       success: true,
       goal: goal.rows[0],
@@ -404,7 +412,7 @@ router.post("/goal/insert", sessionChecker, async (req, res) => {
     ]);
     res.status(200).json({
       success: true,
-      goal: inserted_goal.rows[0],
+      goal: null,
     });
   } catch (err) {
     console.error(err.message);
@@ -421,7 +429,7 @@ router.put("/goal/update", sessionChecker, async (req, res) => {
     const uid = req.session.passport.user;
     const { gid, goal_expense, end_period } = req.body;
     const query = `UPDATE user_goal SET goal_expense = $1, end_period = $2
-        WHERE gid = $3 AND uid = $4 RETURNING *;`;
+        WHERE ugid = $3 AND uid = $4 RETURNING *;`;
     const updated_goal = await pool.query(query, [
       goal_expense,
       end_period,
@@ -430,7 +438,7 @@ router.put("/goal/update", sessionChecker, async (req, res) => {
     ]);
     res.status(200).json({
       success: true,
-      goal: updated_goal.rows[0],
+      goal: null,
     });
   } catch (err) {
     console.error(err.message);
@@ -446,11 +454,11 @@ router.delete("/goal/delete", sessionChecker, async (req, res) => {
   try {
     const uid = req.session.passport.user;
     const { gid } = req.body;
-    const query = `DELETE FROM user_goal WHERE gid = $1 AND uid = $2 RETURNING *;`;
+    const query = `DELETE FROM user_goal WHERE ugid = $1 AND uid = $2 RETURNING *;`;
     const deleted_goal = await pool.query(query, [gid, uid]);
     res.status(200).json({
       success: true,
-      goal: deleted_goal.rows[0],
+      goal: null,
     });
   } catch (err) {
     console.error(err.message);

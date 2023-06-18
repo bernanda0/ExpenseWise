@@ -18,4 +18,44 @@
     <style name="Widget.AppTheme.MaterialButton" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/button_state_color</item>
     </style>
+    <style name="MaterialCalendarTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorOnPrimary">@color/accent</item>
+        <item name="colorPrimary">@color/primary_700</item>
+<!--        white background-->
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="colorPrimaryVariant">@color/primary_700</item>
+        <item name="colorSecondary">@color/primary_700</item>
+        <item name="colorSecondaryVariant">@color/primary_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorError">@color/red</item>
+        <item name="colorOnError">@color/white</item>
+        <item name="colorOnBackground">@color/black</item>
+        <item name="colorControlActivated">@color/primary_700</item>
+        <item name="colorControlHighlight">@color/primary_700</item>
+        <item name="colorControlNormal">@color/primary_700</item>
+        <item name="colorPrimaryDark">@color/primary_700</item>
+<!--        text color is black-->
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
+    <style name="MaterialTimePickerTheme" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorOnPrimary">@color/accent</item>
+        <item name="colorPrimary">@color/primary_700</item>
+        <!--        white background-->
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="colorPrimaryVariant">@color/primary_700</item>
+        <item name="colorSecondary">@color/primary_700</item>
+        <item name="colorSecondaryVariant">@color/primary_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorError">@color/red</item>
+        <item name="colorOnError">@color/white</item>
+        <item name="colorOnBackground">@color/black</item>
+        <item name="colorControlActivated">@color/primary_700</item>
+        <item name="colorControlHighlight">@color/primary_700</item>
+        <item name="colorControlNormal">@color/primary_700</item>
+        <item name="colorPrimaryDark">@color/primary_700</item>
+        <!--        text color is black-->
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
 </resources>

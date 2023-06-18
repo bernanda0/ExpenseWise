@@ -12,10 +12,10 @@ const auth_routes = require("./src/routes/auth.js");
 const app_routes = require("./src/routes/app.js");
 const ovo_routes = require("./src/routes/ovo.js");
 const gpt_routes = require("./src/routes/ocr_gpt.js");
-require("./src/passport.js");
+require("./src/auth/passport.js");
 
 // pg pool
-const pool = require("./src/db.js");
+const pool = require("./src/db/db.js");
 
 // Instantiate the express app and middleware
 const app = express();

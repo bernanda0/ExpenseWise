@@ -54,19 +54,13 @@ router.post("/parse-receipt", upload.single("receipt"), async (req, res) => {
     // convert to JSON
     const gpt_response = response.data.choices[0].text;
     const gpt_json = JSON.parse(gpt_response);
-    const dummy_json = {
-      date: "2021-10-12",
-      amount: 20300,
-      description: "ovo cash",
-    }
-
     console.log(text);
     console.log(response.data.choices[0].text);
 
     res.status(200).json({
       success: true,
       raw: text,
-      gpt: dummy_json,
+      gpt: gpt_json,
     });
 
   } catch (err) {

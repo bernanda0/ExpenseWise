@@ -100,13 +100,19 @@ CREATE TABLE user_rank (
 -- Goal table
 CREATE TABLE user_goal (
     ugid TEXT PRIMARY KEY NOT NULL DEFAULT CONCAT('ug', nextval('ugid_seq')),
-    uid TEXT REFERENCES users (uid) ON DELETE CASCADE UNIQUE,
+    uid TEXT REFERENCES users (uid) ON DELETE CASCADE,
     p_expense INTEGER DEFAULT 0,
     goal_expense INTEGER NOT NULL,
-    start_period DATE NOT NULL DEFAULT NOW()::DATE,
+    start_period TIMESTAMP NOT NULL DEFAULT NOW(),
     end_period DATE NOT NULL,
     status TEXT NOT NULL DEFAULT 'ongoing'
 );
+
+-- Remove unique constrain from uid
+ALTER TABLE user_goal DROP CONSTRAINT user_goal_uid_key;
+
+-- Change the type of start_period to timestamp with default value
+ALTER TABLE user_goal ALTER COLUMN start_period TYPE TIMESTAMP USING start_period::TIMESTAMP;
 
 -- Base record for the reference table
 INSERT INTO
@@ -237,6 +243,8 @@ EXECUTE FUNCTION update_expense_details();
 
 -- Trigger and function
 -- every time there is new or updated expense, the trigger will update the p_expense in user_goal table
+DROP FUNCTION update_p_expense() CASCADE;
+
 CREATE FUNCTION update_p_expense() RETURNS TRIGGER AS $$
 BEGIN
     IF (TG_OP = 'INSERT') THEN
@@ -247,13 +255,17 @@ BEGIN
         UPDATE user_goal
         SET p_expense = p_expense + NEW.amount - OLD.amount
         WHERE uid = NEW.uid;
+    ELSIF (TG_OP = 'DELETE') THEN
+        UPDATE user_goal
+        SET p_expense = p_expense - OLD.amount
+        WHERE uid = OLD.uid;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_p_expense_trigger
-AFTER INSERT OR UPDATE ON expense
+AFTER INSERT OR UPDATE OR DELETE ON expense
 FOR EACH ROW
 EXECUTE FUNCTION update_p_expense();
 
@@ -478,9 +490,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 ---
-INSERT INTO user_goal (uid, goal_expense, end_period) VALUES ('u1', 100000, '2023-6-18');
+INSERT INTO user_goal (uid, goal_expense, end_period) VALUES ('u1', 1000000, '2023-6-18');
 INSERT INTO expense (uid, ecid, amount, time, description) VALUES ('u1', 'ec1', 60000, '2021-12-23 00:17:00', 'Beli elektronik');
 UPDATE expense SET amount = 1200000 WHERE eid = 'e16';
 DELETE FROM user_goal WHERE uid = 'u1';
+
+-- get averafe expense
+SELECT AVG(amount) FROM expense WHERE uid = 'u1';
+-- join expense and its category then get the distinct expense category
+SELECT DISTINCT ec.ec_name FROM expense e JOIN expense_category ec ON ec.ecid = e.ecid WHERE e.uid = 'u1';
+-- select the number of transaction each expense category
+SELECT ec.ec_name, COUNT(ec.ec_name) FROM expense e JOIN expense_category ec ON ec.ecid = e.ecid WHERE e.uid = 'u1' GROUP BY ec.ec_name;
+
+-- UPDATE POINT OF USER
+UPDATE users SET points = 97 WHERE uid = 'u1';
+

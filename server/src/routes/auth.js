@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
-const pool = require("../db.js");
+const pool = require("../db/db.js");
 const bcrypt = require("bcryptjs");
 
 const { SERVER_BASE_URL } = process.env;

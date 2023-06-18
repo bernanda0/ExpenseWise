@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 express().use(express.json());
 express().use(express.urlencoded({ extended: true }));
-const pool = require("../db.js");
+const pool = require("../db/db.js");
 
 const OVOID = require("ovoid");
 let ovoid = new OVOID();

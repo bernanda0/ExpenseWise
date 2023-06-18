@@ -2,11 +2,15 @@ package com.client.expensewise.controller;
 
 import android.content.Context;
 
+import com.client.expensewise.model.Goal;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.thomasbouvier.persistentcookiejar.ClearableCookieJar;
 import com.thomasbouvier.persistentcookiejar.PersistentCookieJar;
 import com.thomasbouvier.persistentcookiejar.cache.SetCookieCache;
 import com.thomasbouvier.persistentcookiejar.persistence.SharedPrefsCookiePersistor;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
