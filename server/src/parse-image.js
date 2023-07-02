@@ -68,12 +68,6 @@ const parseReceipt = async (event) => {
       presence_penalty: listParams.presence_penalty,
     });
 
-    const dummy_json = {
-      date: "2021-10-12",
-      amount: 20300,
-      description: "ovo cash",
-    };
-
     console.log(text);
     console.log(response.data.choices[0].text);
 

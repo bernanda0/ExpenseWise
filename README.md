@@ -39,6 +39,23 @@ The ExpenseWise project utilizes the Express.js framework on the backend for bui
 
 2. To utilize the ExpenseWise API, refer to the following documentation: [API Documentation](https://docs.google.com/document/d/1gZ0_Tszja2SeD36d46BV1HWniIX2rnCXc3t7y7eOufg/edit)
 
+## Product
+
+1. Login/Authentication
+![login](/miscellaneous/ss/login.png)
+2. Dashboard
+![dashboard](/miscellaneous/ss/dashboard.png)
+3. Add
+![add](/miscellaneous/ss/add.png)
+4. Edit
+![edit](/miscellaneous/ss/edit.png)
+5. Parse with GPT
+![parse](/miscellaneous/ss/parse.png)
+6. Set Goal
+![goal](/miscellaneous/ss/goal.png)
+7. Logout/Kill session
+![logout](/miscellaneous/ss/logout.png)
+
 ## Features
 
 ExpenseWise offers the following features:
